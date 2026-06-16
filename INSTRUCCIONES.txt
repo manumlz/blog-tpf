@@ -1,0 +1,94 @@
+====================================================
+ INSTRUCCIONES DE DESPLIEGUE — Blog Personal
+ Victor Manuel Miranda López — UTN FRT
+====================================================
+
+PASO 0 — Reemplazar archivos placeholder
+-----------------------------------------
+Antes de copiar los archivos al servidor, colocá:
+  - app/static/foto.jpg      → tu foto personal (imagen cuadrada, mín. 120×120 px)
+  - app/static/informe.pdf   → el informe de la materia en PDF
+
+----------------------------------------------------
+PASO 1 — Configurar el CT de Base de Datos (CT-db)
+IP de ejemplo: 172.16.90.203
+----------------------------------------------------
+
+1.a  Copiar archivos al CT-db (desde el host Proxmox o via SCP):
+     scp -r db/ scripts/setup-db.sh root@172.16.90.203:/root/blog-setup/
+
+1.b  Conectarse al CT-db:
+     pct enter <ID_CT_DB>
+     # o: ssh root@172.16.90.203
+
+1.c  Ejecutar el script de DB:
+     cd /root/blog-setup
+     chmod +x setup-db.sh
+     ./setup-db.sh
+     # Ingresá la contraseña root de MariaDB cuando se solicite.
+
+1.d  (Opcional) Aplicar tuning de memoria en el CT-db:
+     cp config/mariadb-low-mem.cnf /etc/mysql/mariadb.conf.d/99-low-mem.cnf
+     systemctl restart mariadb
+
+----------------------------------------------------
+PASO 2 — Configurar el CT Web (CT-web)
+----------------------------------------------------
+
+2.a  Copiar TODO el proyecto al CT-web:
+     scp -r blog-tpf/ root@<IP_CT_WEB>:/root/
+
+2.b  Conectarse al CT-web:
+     pct enter <ID_CT_WEB>
+     # o: ssh root@<IP_CT_WEB>
+
+2.c  Ejecutar el script de instalación:
+     cd /root/blog-tpf
+     chmod +x scripts/setup-web.sh
+     ./scripts/setup-web.sh
+
+     El script hace automáticamente:
+       - Instala python3, nginx
+       - Crea el entorno virtual en /app/venv
+       - Instala Flask, Gunicorn, PyMySQL
+       - Descarga las fuentes Montserrat (.woff2)
+       - Copia la app a /app/
+       - Configura Nginx como reverse proxy
+       - Instala y arranca el servicio systemd `blog`
+
+2.d  Verificar que todo funciona:
+     systemctl status blog
+     systemctl status nginx
+     curl http://localhost/
+
+----------------------------------------------------
+PASO 3 — Probar desde el navegador
+----------------------------------------------------
+
+Abrí http://<IP_CT_WEB>/ en el navegador.
+Deberías ver la home del blog con tu foto, datos personales
+y el formulario para agregar entradas.
+
+----------------------------------------------------
+SOLUCIÓN DE PROBLEMAS
+----------------------------------------------------
+
+• Ver logs del blog:
+    journalctl -u blog -f
+    cat /var/log/blog-error.log
+
+• Ver logs de Nginx:
+    cat /var/log/nginx/error.log
+
+• Reiniciar servicios:
+    systemctl restart blog
+    systemctl restart nginx
+
+• El script setup-web.sh es idempotente: podés reejecutarlo
+  si algo falla, no rompe la instalación existente.
+
+• Si las fuentes no se descargaron automáticamente,
+  descargalas manualmente de https://fonts.google.com/specimen/Montserrat
+  y colocá los archivos .woff2 en /app/static/fonts/
+  con los nombres: montserrat-300.woff2, montserrat-400.woff2,
+                   montserrat-600.woff2, montserrat-700.woff2

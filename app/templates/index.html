@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Blog Personal — Victor Manuel Miranda López{% endblock %}
+
+{% block content %}
+
+<!-- ===== DATOS PERSONALES ===== -->
+<section class="perfil-section">
+    <div class="perfil-card">
+        <div class="perfil-foto-wrap">
+            <img
+                src="{{ url_for('static', filename='foto.jpg') }}"
+                alt="Foto de Victor Manuel Miranda López"
+                class="perfil-foto"
+            >
+        </div>
+        <div class="perfil-info">
+            <h1 class="perfil-nombre">Victor Manuel Miranda López</h1>
+            <ul class="perfil-datos">
+                <li><span class="label">DNI</span><span class="value">45 187 822</span></li>
+                <li><span class="label">Carrera</span><span class="value">Ingeniería en Sistemas de Información</span></li>
+                <li><span class="label">Facultad</span><span class="value">UTN Facultad Regional Tucumán</span></li>
+                <li><span class="label">Materia</span><span class="value">Virtualización y Consolidación de Servidores</span></li>
+            </ul>
+            <a href="/static/informe.pdf" class="btn-pdf" target="_blank" rel="noopener">
+                Descargar Informe PDF
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FORMULARIO NUEVA ENTRADA ===== -->
+<section class="form-section">
+    <h2 class="section-title">Nueva Entrada</h2>
+
+    <form class="post-form" method="POST" action="{{ url_for('index') }}" novalidate>
+
+        <div class="form-group {% if errores.titulo %}form-group--error{% endif %}">
+            <label for="titulo">Título</label>
+            <input
+                type="text"
+                id="titulo"
+                name="titulo"
+                maxlength="200"
+                value="{{ form_titulo | default('') }}"
+                placeholder="Título de la entrada"
+                autocomplete="off"
+            >
+            {% if errores.titulo %}
+                <span class="field-error">{{ errores.titulo }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-group {% if errores.contenido %}form-group--error{% endif %}">
+            <label for="contenido">Contenido</label>
+            <textarea
+                id="contenido"
+                name="contenido"
+                rows="6"
+                placeholder="Escribí el contenido de tu entrada..."
+            >{{ form_contenido | default('') }}</textarea>
+            {% if errores.contenido %}
+                <span class="field-error">{{ errores.contenido }}</span>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn-submit">Publicar</button>
+
+    </form>
+</section>
+
+<!-- ===== LISTA DE POSTS ===== -->
+<section class="posts-section">
+    <h2 class="section-title">Entradas del Blog</h2>
+
+    {% if posts %}
+        <div class="posts-list">
+            {% for post in posts %}
+            <article class="post-card">
+                <header class="post-card__header">
+                    <h3 class="post-card__titulo">{{ post.titulo }}</h3>
+                    <time class="post-card__fecha" datetime="{{ post.fecha_creacion.strftime('%Y-%m-%dT%H:%M') }}">
+                        {{ post.fecha_creacion | fecha_es }}
+                    </time>
+                </header>
+                <div class="post-card__contenido">
+                    {{ post.contenido }}
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="posts-vacio">Todavía no hay entradas publicadas.</p>
+    {% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,21 @@
+[Unit]
+Description=Blog Personal Flask - Gunicorn
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/app
+ExecStart=/app/venv/bin/gunicorn \
+    --workers 1 \
+    --bind 127.0.0.1:8000 \
+    --timeout 30 \
+    --log-level info \
+    --access-logfile /var/log/blog-access.log \
+    --error-logfile /var/log/blog-error.log \
+    app:app
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
